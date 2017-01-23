@@ -1,5 +1,3 @@
-import pygame
-
 from engine import World, Model, Light, DirectedLight, Camera, Engine, SIZE
 
 
@@ -28,12 +26,10 @@ def main():
     delta_time = 0.1
 
     try:
-        clock = pygame.time.Clock()
         while True:
             if not engine.init_frame():
                 break
             world.render()
-            clock.tick_busy_loop(1)
             bounce_speed += bounce_accel * delta_time
             model.y += bounce_speed * delta_time
             if model.y < 0:

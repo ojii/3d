@@ -3,7 +3,8 @@ from typing import NamedTuple, List, TextIO, Tuple, Iterator
 
 import math
 
-import pygame
+import sdl
+
 
 SIZE = WIDTH, HEIGHT = 800, 600
 BACKGROUND = (0.1875, 0.125, 0.0625, 1.0)
@@ -205,34 +206,40 @@ def f2i(f: float) -> int:
         return int(math.floor(f * 256.0))
 
 
+def ft2it(*floats):
+    return map(f2i, floats)
+
+
 class Engine:
     def __init__(self, size):
-        pygame.init()
-        self.screen = pygame.display.set_mode(size)
-
-    def rgba2c(self, r: float, g: float, b: float, a: float) -> pygame.Color:
-        """
-        Convert r,g,b,a (as floats) to a pygame Color
-        """
-        return pygame.Color(f2i(r), f2i(g), f2i(b), f2i(a))
+        if sdl.init(sdl.INIT_VIDEO) != 0:
+            raise Exception('Failed to init sdl2')
+        self.window = sdl.createWindow('3d', sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, WIDTH, HEIGHT, sdl.WINDOW_ALLOW_HIGHDPI)
+        self.renderer = sdl.createRenderer(self.window, -1, 0)
 
     def init_frame(self) -> bool:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+        while True:
+            event = sdl.Event()
+            if not sdl.pollEvent(event):
+                return True
+            if event.type == sdl.QUIT:
                 return False
-        return True
 
     def fill(self, r: float, g: float, b: float, a: float):
-        self.screen.fill(self.rgba2c(r, g, b, a))
+        sdl.setRenderDrawColor(self.renderer, *ft2it(r, g, b, a))
+        sdl.renderClear(self.renderer)
 
     def set_pixel(self, x: int, y: int, r: float, g: float, b: float, a: float):
-        self.screen.set_at((x, y), self.rgba2c(r, g, b, a))
+        sdl.setRenderDrawColor(self.renderer, *ft2it(r, g, b, a))
+        sdl.renderDrawPoint(self.renderer, x, y)
 
     def finish_frame(self):
-        pygame.display.flip()
+        sdl.renderPresent(self.renderer)
 
     def quit(self):
-        pygame.quit()
+        sdl.destroyRenderer(self.renderer)
+        sdl.destroyWindow(self.window)
+        sdl.quit()
 
 
 def rotate(rotation: float, a: float, b: float) -> Tuple[float, float]:
